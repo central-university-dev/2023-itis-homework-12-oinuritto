@@ -8,7 +8,6 @@ import ru.shop.backend.search.model.*;
 import ru.shop.backend.search.repository.ItemDbRepository;
 import ru.shop.backend.search.repository.ItemRepository;
 
-import javax.xml.catalog.Catalog;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -21,73 +20,37 @@ public class SearchService {
     private final ItemRepository repo;
     private final ItemDbRepository repoDb;
 
-    private Pageable pageable = PageRequest.of(0, 150);
-    private Pageable pageableSmall = PageRequest.of(0, 10);
-
-    private static Pattern pattern = Pattern.compile("\\d+");
+    private final Pageable pageable = PageRequest.of(0, 150);
+    private final Pageable pageableSmall = PageRequest.of(0, 10);
+    private static final Pattern PATTERN = Pattern.compile("\\d+");
 
     public static boolean isNumeric(String strNum) {
         if (strNum == null) {
             return false;
         }
-        return pattern.matcher(strNum).matches();
+        return PATTERN.matcher(strNum).matches();
     }
+
     public synchronized SearchResult getSearchResult(Integer regionId, String text){
-        List<CatalogueElastic> result = null;
-        if (isNumeric(text)) {
-            Integer itemId = repoDb.findBySku(text).stream().findFirst().orElse(null);
-            if (itemId == null) {
-                var catalogue = getByName(text);
-                if (catalogue.size() > 0) {
-                    result = catalogue;
-                }
-            }
-            try {
-                result = getByItemId(itemId.toString());
-            } catch (Exception e) {
-            }
-        }
+        List<CatalogueElastic> result = checkForNumericAndGetCatalogueList(text);
+
         if(result == null) {
             result = getAll(text);
         }
-        List<Item> items = repoDb.findByIds(regionId,
-                    result.stream()
-                            .flatMap(category -> category.getItems().stream())
-                            .map(item -> item.getItemId()) .collect(Collectors.toList())
-                            ).stream()
-                .map(arr -> new Item(((BigInteger) arr[2]).intValue(),arr[1].toString(),arr[3].toString(),arr[4].toString(),((BigInteger) arr[0]).intValue() , arr[5].toString()))
-                            .collect(Collectors.toList());
-        Set<String> catUrls = new HashSet();
-        String brand = null;
-        if(!result.isEmpty())
-            brand = result.get(0).getBrand();
-        if(brand == null){
-            brand = "";
-        }
-        brand = brand.toLowerCase(Locale.ROOT);
-        String finalBrand = brand;
-        List<Category> categories = repoDb.findCatsByIds(items.stream().map(i-> i.getItemId()).collect(Collectors.toList())).stream()
-                .map(arr ->
-                {
-                    if(catUrls.contains(arr[2].toString()))
-                        return null;
-                    catUrls.add(arr[2].toString());
-                    return
-                            new Category(arr[0].toString()
-                                    , arr[1].toString()
-                                    , "/cat/" + arr[2].toString() + (finalBrand.isEmpty()?"":"/brands/"+ finalBrand)
-                                    , "/cat/" + arr[3].toString(), arr[4] == null ? null : arr[4].toString());
-                })
-                .filter(x -> x != null)
-                .collect(Collectors.toList());
+
+        List<Item> items = getItemsFromCatalogueList(regionId, result);
+
+        Set<String> catUrls = new HashSet<>();
+        String finalBrand = getBrandFromCatalogueList(result);
+        List<Category> categories = getCategoriesFromItemList(items, catUrls, finalBrand);
+
         return new SearchResult(
                 items,
                 categories,
-                result.size()>0?(List.of(new TypeHelpText(TypeOfQuery.SEE_ALSO,
-                        ((result.get(0).getItems().get(0).getType()!=null?result.get(0).getItems().get(0).getType():"") +
-                        " " + (result.get(0).getBrand()!=null?result.get(0).getBrand():"")).trim()))):new ArrayList<>()
+                getTypeQueriesFromCatalogueList(result)
         );
     }
+
     public synchronized List<CatalogueElastic> getAll(String text){
         return getAll(text, pageableSmall);
     }
@@ -281,5 +244,96 @@ public class SearchService {
     }
     public List<CatalogueElastic> getAllFull(String text) {
         return getAll(text, pageable);
+    }
+
+    private List<TypeHelpText> getTypeQueriesFromCatalogueList(List<CatalogueElastic> result) {
+        if (result.isEmpty() || result.get(0).getItems().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        CatalogueElastic catalogue = result.get(0);
+        ItemElastic item = catalogue.getItems().get(0);
+        String type = Optional.ofNullable(item.getType()).orElse("");
+        String brand = Optional.ofNullable(catalogue.getBrand()).orElse("");
+        String queryText = (type + " " + brand).trim();
+
+        return Collections.singletonList(new TypeHelpText(TypeOfQuery.SEE_ALSO, queryText));
+    }
+
+    private List<Category> getCategoriesFromItemList(List<Item> items, Set<String> catUrls, String finalBrand) {
+        return repoDb.findCatsByIds(getItemIdsFromItemList(items))
+                .stream()
+                .map(arr -> getCategoryFromObjArray(arr, catUrls, finalBrand))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private List<Item> getItemsFromCatalogueList(Integer regionId, List<CatalogueElastic> result) {
+        return repoDb.findByIds(regionId, getItemIdsFromCatalogueList(result))
+                .stream()
+                .map(this::getItemFromObjArray)
+                .collect(Collectors.toList());
+    }
+
+    private Category getCategoryFromObjArray(Object[] arr, Set<String> catUrls, String finalBrand) {
+        String catUrl = arr[2].toString();
+
+        if (catUrls.contains(catUrl)) {
+            return null;
+        }
+        catUrls.add(catUrl);
+
+        String brandUrl = finalBrand.isEmpty() ? "" : "/brands/" + finalBrand;
+        String categoryUrl = "/cat/" + catUrl + brandUrl;
+        String description = (arr[4] == null) ? null : arr[4].toString();
+
+        return new Category(
+                arr[0].toString(),
+                arr[1].toString(),
+                categoryUrl,
+                "/cat/" + arr[3].toString(),
+                description
+        );
+    }
+
+    private List<Integer> getItemIdsFromItemList(List<Item> items) {
+        return items.stream().map(Item::getItemId).collect(Collectors.toList());
+    }
+
+    private String getBrandFromCatalogueList(List<CatalogueElastic> result) {
+        return result.stream()
+                .findFirst()
+                .map(CatalogueElastic::getBrand)
+                .orElse("")
+                .toLowerCase(Locale.ROOT);
+    }
+
+    private Item getItemFromObjArray(Object[] arr) {
+        return new Item(((BigInteger) arr[2]).intValue(), arr[1].toString(), arr[3].toString(), arr[4].toString(),
+                ((BigInteger) arr[0]).intValue(), arr[5].toString());
+    }
+
+    private List<Long> getItemIdsFromCatalogueList(List<CatalogueElastic> result) {
+        return result.stream()
+                .flatMap(category -> category.getItems().stream())
+                .map(ItemElastic::getItemId)
+                .collect(Collectors.toList());
+    }
+
+    private List<CatalogueElastic> checkForNumericAndGetCatalogueList(String text) {
+        List<CatalogueElastic> result = null;
+        if (isNumeric(text)) {
+            Integer itemId = repoDb.findBySku(text).stream().findFirst().orElse(null);
+            if (itemId == null) {
+                var catalogue = getByName(text);
+                if (!catalogue.isEmpty()) {
+                    result = catalogue;
+                }
+            }
+            else {
+                result = getByItemId(itemId.toString());
+            }
+        }
+        return result;
     }
 }
