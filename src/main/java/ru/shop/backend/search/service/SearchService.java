@@ -31,6 +31,22 @@ public class SearchService {
         return PATTERN.matcher(strNum).matches();
     }
 
+    public SearchResultElastic getSearchResultElastic(String text) {
+        if (isNumeric(text)) {
+            Integer itemId = repoDb.findBySku(text).stream().findFirst().orElse(null);
+            if (itemId == null) {
+                var catalogue = getByName(text);
+                if (!catalogue.isEmpty()) {
+                    return new SearchResultElastic(catalogue);
+                }
+                return new SearchResultElastic(getAllFull(text));
+            } else {
+                return new SearchResultElastic(getByItemId(itemId.toString()));
+            }
+        }
+        return new SearchResultElastic(getAllFull(text));
+    }
+
     public synchronized SearchResult getSearchResult(Integer regionId, String text){
         List<CatalogueElastic> result = checkForNumericAndGetCatalogueList(text);
 
