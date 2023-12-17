@@ -1,6 +1,5 @@
 package ru.shop.backend.search;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -516,6 +515,47 @@ public class SearchControllerTests {
                                     "    {\n" +
                                     "      \"type\": \"SEE_ALSO\",\n" +
                                     "      \"text\": \"clothing Brand\"\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forCatalogueAndTypeAndItemName() throws Exception {
+            String searchText = "fashion clothing shirt";
+            Cookie regionIdCookie = new Cookie("regionId", "1");
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search")
+                            .param("text", searchText)
+                            .cookie(regionIdCookie))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"items\": [\n" +
+                                    "    {\n" +
+                                    "      \"price\": 500,\n" +
+                                    "      \"name\": \"T-Shirt Y\",\n" +
+                                    "      \"url\": \"example.com/item2\",\n" +
+                                    "      \"image\": \"i2\",\n" +
+                                    "      \"itemId\": 2,\n" +
+                                    "      \"cat\": \"clothing\"\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"categories\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"parentName\": \"Fashion\",\n" +
+                                    "      \"url\": \"/cat/Fashion\",\n" +
+                                    "      \"parentUrl\": \"/cat/Fashion\",\n" +
+                                    "      \"image\": \"example.com/fashion\"\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"typeQueries\": [\n" +
+                                    "    {\n" +
+                                    "      \"type\": \"SEE_ALSO\",\n" +
+                                    "      \"text\": \"clothing\"\n" +
                                     "    }\n" +
                                     "  ]\n" +
                                     "}")
