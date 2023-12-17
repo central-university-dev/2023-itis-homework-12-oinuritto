@@ -149,8 +149,7 @@ public class SearchService {
     }
 
     public List<CatalogueElastic> getByName(String num) {
-        List<ItemElastic> list = new ArrayList<>();
-        list = repo.findAllByName(".*" + num + ".*", pageable);
+        List<ItemElastic> list = repo.findAllByName(".*" + num + ".*", pageable);
         return get(list, num, "");
     }
 
