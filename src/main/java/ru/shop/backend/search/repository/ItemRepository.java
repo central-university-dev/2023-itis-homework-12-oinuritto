@@ -131,7 +131,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "\"bool\": { \n" +
             "      \"must\": [\n" +
             "{\"match\": {\n" +
-            "      \"type\": {\n" +
+            "      \"fulltext\": {\n" +
             "        \"query\": \"?0\",\n" +
             "        \"fuzziness\": \"2\",\n" +
             "        \"boost\": \"1\"\n" +
@@ -149,7 +149,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "\"bool\": { \n" +
             "      \"must\": [\n" +
             "{\"match\": {\n" +
-            "      \"type\": {\n" +
+            "      \"fulltext\": {\n" +
             "        \"query\": \"?0\",\n" +
             "        \"fuzziness\": \"2\"\n" +
             "      }\n" +
