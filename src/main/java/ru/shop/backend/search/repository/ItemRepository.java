@@ -4,10 +4,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.stereotype.Repository;
 import ru.shop.backend.search.model.ItemElastic;
 
 import java.util.List;
 
+@Repository
 public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Integer> {
 
 

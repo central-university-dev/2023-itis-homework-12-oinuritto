@@ -2,11 +2,13 @@ package ru.shop.backend.search.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 import ru.shop.backend.search.model.ItemEntity;
 
 import java.util.List;
 import java.util.stream.Stream;
 
+@Repository
 public interface ItemDbRepository  extends JpaRepository<ItemEntity, Long> {
     @Query(value = "select i.item_id, i.name, r.price, i.itemurl as url, i as image ,\n" +
             " i.type from item as i\n" +
