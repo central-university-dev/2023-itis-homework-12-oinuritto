@@ -46,14 +46,10 @@ public class SearchService {
         }
 
         List<Item> items = getItemsFromCatalogueList(regionId, result);
-
         String finalBrand = getBrandFromCatalogueList(result);
         List<Category> categories = getCategoriesFromItemList(items, finalBrand);
 
-        return new SearchResult(
-                items,
-                categories,
-                getTypeQueriesFromCatalogueList(result)
+        return new SearchResult(items, categories, getTypeQueriesFromCatalogueList(result)
         );
     }
 
@@ -247,7 +243,9 @@ public class SearchService {
     }
 
     private List<Integer> getItemIdsFromItemList(List<Item> items) {
-        return items.stream().map(Item::getItemId).collect(Collectors.toList());
+        return items.stream()
+                .map(Item::getItemId)
+                .collect(Collectors.toList());
     }
 
     private String getBrandFromCatalogueList(List<CatalogueElastic> result) {
@@ -301,16 +299,15 @@ public class SearchService {
         String brand = "";
         String brandQuery = "";
 
-//        if (text.contains(" ")) {
-            for (String queryWord : text.split("\\s")) {
-                list = getItemElasticListByBrandQuery(queryWord, needConvert, pageable);
-                if (!list.isEmpty()) {
-                    brand = list.get(0).getBrand();
-                    brandQuery = queryWord;
-                    break;
-                }
+        for (String queryWord : text.split("\\s")) {
+            list = getItemElasticListByBrandQuery(queryWord, needConvert, pageable);
+            if (!list.isEmpty()) {
+                brand = list.get(0).getBrand();
+                brandQuery = queryWord;
+                break;
             }
-//        }
+        }
+
         result.put("brand", brand);
         result.put("brandQuery", brandQuery);
         return result;
@@ -330,20 +327,15 @@ public class SearchService {
         String type = "";
         String typeQuery = "";
 
-//        list = getItemElasticListByTypeQuery(text, needConvert, pageable);
-//
-//        if (!list.isEmpty()) {
-//            type = getMinLengthType(list);
-//        } else {
-            for (String queryWord : text.split("\\s")) {
-                list = getItemElasticListByTypeQuery(queryWord, needConvert, pageable);
-                if (!list.isEmpty()) {
-                    typeQuery = queryWord;
-                    type = getMinLengthType(list);
-                    break;
-                }
+        for (String queryWord : text.split("\\s")) {
+            list = getItemElasticListByTypeQuery(queryWord, needConvert, pageable);
+            if (!list.isEmpty()) {
+                typeQuery = queryWord;
+                type = getMinLengthType(list);
+                break;
             }
-//        }
+        }
+
         result.put("type", type);
         result.put("typeQuery", typeQuery);
         return result;

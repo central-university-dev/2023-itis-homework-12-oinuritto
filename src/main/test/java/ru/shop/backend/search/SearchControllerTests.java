@@ -137,7 +137,7 @@ public class SearchControllerTests {
         }
 
         @Test
-        public void testFind_forExistTypeAndExistRegionId() throws Exception {
+        public void testFind_forType() throws Exception {
             String searchText = "clothing";
             Cookie regionIdCookie = new Cookie("regionId", "1");
 
@@ -605,6 +605,405 @@ public class SearchControllerTests {
                                     "    {\n" +
                                     "      \"type\": \"SEE_ALSO\",\n" +
                                     "      \"text\": \"clothing\"\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+    }
+
+    @Nested
+    @DisplayName("Test SearchResultElastic finds method")
+    class TestFindsMethod {
+        @Test
+        public void testFind_forExistNumericSKU() throws Exception {
+            String searchText = "12345";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Electronics\",\n" +
+                                    "      \"catalogueId\": 1,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Smartphone X\",\n" +
+                                    "          \"itemId\": 1,\n" +
+                                    "          \"brand\": \"Ant\",\n" +
+                                    "          \"type\": \"electronics\",\n" +
+                                    "          \"description\": \"high-end smartphone with x\"\n" +
+                                    "        }\n" +
+                                    "      ],\n" +
+                                    "      \"brand\": \"Ant\"\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forNotExistText() throws Exception {
+            String searchText = "text";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": []\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forType() throws Exception {
+            String searchText = "clothing";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"catalogueId\": 2,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"T-Shirt Y\",\n" +
+                                    "          \"itemId\": 2,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable cotton t-shirt y\"\n" +
+                                    "        },\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Jeans B\",\n" +
+                                    "          \"itemId\": 5,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"trendy denim jeans b\"\n" +
+                                    "        },\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Shoes\",\n" +
+                                    "          \"itemId\": 7,\n" +
+                                    "          \"brand\": \"Cool\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable stylish shoes\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forTypeAndItemName() throws Exception {
+            String searchText = "clothing shirt";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"catalogueId\": 2,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"T-Shirt Y\",\n" +
+                                    "          \"itemId\": 2,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable cotton t-shirt y\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forCatalogueAndType() throws Exception {
+            String searchText = "fashion clothing";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"catalogueId\": 2,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Shoes\",\n" +
+                                    "          \"itemId\": 7,\n" +
+                                    "          \"brand\": \"Cool\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable stylish shoes\"\n" +
+                                    "        },\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Jeans B\",\n" +
+                                    "          \"itemId\": 5,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"trendy denim jeans b\"\n" +
+                                    "        },\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"T-Shirt Y\",\n" +
+                                    "          \"itemId\": 2,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable cotton t-shirt y\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forCatalogueAndItemName() throws Exception {
+            String searchText = "fashion shirt";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"catalogueId\": 2,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"T-Shirt Y\",\n" +
+                                    "          \"itemId\": 2,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable cotton t-shirt y\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forBrand() throws Exception {
+            String searchText = "apple";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Electronics\",\n" +
+                                    "      \"catalogueId\": 1,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Macbook Air 2022\",\n" +
+                                    "          \"itemId\": 8,\n" +
+                                    "          \"brand\": \"Apple\",\n" +
+                                    "          \"type\": \"electronics\",\n" +
+                                    "          \"description\": \"super mega cool laptop\"\n" +
+                                    "        }\n" +
+                                    "      ],\n" +
+                                    "      \"brand\": \"Apple\"\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forTypeAndBrand() throws Exception {
+            String searchText = "clothing cool";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"catalogueId\": 2,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Shoes\",\n" +
+                                    "          \"itemId\": 7,\n" +
+                                    "          \"brand\": \"Cool\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable stylish shoes\"\n" +
+                                    "        }\n" +
+                                    "      ],\n" +
+                                    "      \"brand\": \"Cool\"\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forBrandAndItemName() throws Exception {
+            String searchText = "brand shirt";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"catalogueId\": 2,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"T-Shirt Y\",\n" +
+                                    "          \"itemId\": 2,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable cotton t-shirt y\"\n" +
+                                    "        }\n" +
+                                    "      ],\n" +
+                                    "      \"brand\": \"Brand\"\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forItemName() throws Exception {
+            String searchText = "macbook";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Electronics\",\n" +
+                                    "      \"catalogueId\": 1,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Macbook Air 2022\",\n" +
+                                    "          \"itemId\": 8,\n" +
+                                    "          \"brand\": \"Apple\",\n" +
+                                    "          \"type\": \"electronics\",\n" +
+                                    "          \"description\": \"super mega cool laptop\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forNumericInName() throws Exception {
+            String searchText = "2022";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Electronics\",\n" +
+                                    "      \"catalogueId\": 1,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Macbook Air 2022\",\n" +
+                                    "          \"itemId\": 8,\n" +
+                                    "          \"brand\": \"Apple\",\n" +
+                                    "          \"type\": \"electronics\",\n" +
+                                    "          \"description\": \"super mega cool laptop\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forCatalogueAndTypeAndItemName() throws Exception {
+            String searchText = "fashion clothing shirt";
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Fashion\",\n" +
+                                    "      \"catalogueId\": 2,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"T-Shirt Y\",\n" +
+                                    "          \"itemId\": 2,\n" +
+                                    "          \"brand\": \"Brand\",\n" +
+                                    "          \"type\": \"clothing\",\n" +
+                                    "          \"description\": \"comfortable cotton t-shirt y\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    );
+        }
+
+        @Test
+        public void testFind_forConvertedText() throws Exception {
+            String searchText = "ьфсищщл"; // macbook
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/search/by")
+                            .param("text", searchText))
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                            content().json("{\n" +
+                                    "  \"result\": [\n" +
+                                    "    {\n" +
+                                    "      \"name\": \"Electronics\",\n" +
+                                    "      \"catalogueId\": 1,\n" +
+                                    "      \"items\": [\n" +
+                                    "        {\n" +
+                                    "          \"name\": \"Macbook Air 2022\",\n" +
+                                    "          \"itemId\": 8,\n" +
+                                    "          \"brand\": \"Apple\",\n" +
+                                    "          \"type\": \"electronics\",\n" +
+                                    "          \"description\": \"super mega cool laptop\"\n" +
+                                    "        }\n" +
+                                    "      ]\n" +
                                     "    }\n" +
                                     "  ]\n" +
                                     "}")
