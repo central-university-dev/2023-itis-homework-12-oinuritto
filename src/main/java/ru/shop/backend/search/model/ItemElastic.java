@@ -14,6 +14,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Data
@@ -56,20 +57,22 @@ public class ItemElastic {
         this.brand = entity.getBrand();
         this.type = entity.getType();
     }
-    public String buildDescription(String description){
-        return Arrays.stream(description.split(";")).map(
-                d -> {
-                    d = d.toLowerCase(Locale.ROOT);
-                    if(d.contains(": нет"))
-                        return null;
-                    if(d.contains(": -"))
-                        return null;
-                    if(d.contains(": есть"))
-                        return d.replace(": есть", "");
-                    if(d.contains(": 0 "))
-                        return null;
-                    return d.replace(":","");
-                }
-        ).filter( d -> d != null).collect(Collectors.joining());
+
+    public String buildDescription(String inputDescription) {
+        return Arrays.stream(inputDescription.split(";"))
+                .map(this::processDescriptionPart)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining());
+    }
+
+    private String processDescriptionPart(String descriptionPart) {
+        descriptionPart = descriptionPart.toLowerCase(Locale.ROOT);
+        if (descriptionPart.contains(": нет") || descriptionPart.contains(": -") || descriptionPart.contains(": 0 ")) {
+            return null;
+        }
+        if (descriptionPart.contains(": есть")) {
+            return descriptionPart.replace(": есть", "");
+        }
+        return descriptionPart.replace(":", "");
     }
 }
