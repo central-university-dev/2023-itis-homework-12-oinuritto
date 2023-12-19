@@ -131,6 +131,29 @@
 <!--					<repository>${docker.image.prefix}/search</repository>-->
 <!--				</configuration>-->
 <!--			</plugin>-->
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.10</version>
+                <executions>
+                    <execution>
+                        <id>report</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputDirectory>
+                        ${jacoco.path}
+                    </outputDirectory>
+                    <excludes>
+                        <exclude>**/model/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
