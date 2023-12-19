@@ -1,7 +1,7 @@
-drop table if exists item cascade;
-drop table if exists item_sku cascade;
-drop table if exists remain cascade;
-drop table if exists catalogue cascade;
+drop table if exists item;
+drop table if exists item_sku;
+drop table if exists remain;
+drop table if exists catalogue;
 
 create table item
 (
@@ -11,7 +11,6 @@ create table item
     catalogue_id bigint,
     name         varchar,
     i            varchar,
-
     brand_id     bigint,
     brand        varchar,
     catalogue    varchar,

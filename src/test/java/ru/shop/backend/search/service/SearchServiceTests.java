@@ -27,7 +27,7 @@ public class SearchServiceTests {
 
     @Container
     public static PostgreSQLContainer<?> postgreSQLContainer =
-            new PostgreSQLContainer<>("postgres:15")
+            new PostgreSQLContainer<>("postgres:10")
                     .withInitScript("test_init.sql");
     @Container
     public static ElasticsearchContainer elasticsearchContainer =

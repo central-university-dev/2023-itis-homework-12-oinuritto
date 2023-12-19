@@ -1,0 +1,61 @@
+version: '3.3'
+
+services:
+  database:
+    image: postgres:10
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgresPassword
+      POSTGRES_DB: site
+    ports:
+      - "5431:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - cloud
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:7.17.4
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9201:9200"
+    networks:
+      - cloud
+    healthcheck:
+      test: curl -s http://elasticsearch:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: application
+    ports:
+      - "8080:8080"
+    networks:
+      - cloud
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    environment:
+      - "SPRING_DATASOURCE_USERNAME=postgres"
+      - "SPRING_DATASOURCE_PASSWORD=postgresPassword"
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/site"
+      - "SPRING_ELASTICSEARCH_URI=elasticsearch:9200"
+      - "SERVER_PORT=8080"
+
+networks:
+  cloud:
+    external: true
