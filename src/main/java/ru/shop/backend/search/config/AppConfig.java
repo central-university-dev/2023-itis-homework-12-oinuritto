@@ -15,14 +15,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class AppConfig {
     @Bean
-    public ClientConfiguration clientConfiguration(@Value("${spring.elasticsearch.rest.uris}") String elasticUrl) {
+    public ClientConfiguration clientConfiguration(@Value("${spring.elasticsearch.uris}") String elasticUrl) {
         return ClientConfiguration.builder().connectedTo(elasticUrl)
                 .build();
     }
     @Bean
     @Autowired
-    public RestHighLevelClient restHighLevelClient(ClientConfiguration client){
+    public RestHighLevelClient restHighLevelClient(ClientConfiguration client) {
         return RestClients.create(client).rest();
     }
-
 }

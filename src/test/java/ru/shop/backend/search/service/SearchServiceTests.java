@@ -45,7 +45,7 @@ public class SearchServiceTests {
 
     @DynamicPropertySource
     static void elasticsearchProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.elasticsearch.rest.uris", () -> elasticsearchContainer.getHttpHostAddress());
+        registry.add("spring.elasticsearch.uris", () -> elasticsearchContainer.getHttpHostAddress());
     }
 
 
