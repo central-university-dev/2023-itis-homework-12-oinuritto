@@ -1,10 +1,8 @@
 package ru.shop.backend.search.config;
 
-import org.apache.http.Header;
-import  org.springframework.http.HttpHeaders;
-import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
@@ -16,16 +14,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableElasticsearchRepositories
 @EnableScheduling
 public class AppConfig {
-    private String elasticUrl = "127.0.0.1:9200";
     @Bean
-    public ClientConfiguration clientConfiguration(){
+    public ClientConfiguration clientConfiguration(@Value("${spring.elasticsearch.uris}") String elasticUrl) {
         return ClientConfiguration.builder().connectedTo(elasticUrl)
                 .build();
     }
     @Bean
     @Autowired
-    public RestHighLevelClient restHighLevelClient(ClientConfiguration client){
+    public RestHighLevelClient restHighLevelClient(ClientConfiguration client) {
         return RestClients.create(client).rest();
     }
-
 }

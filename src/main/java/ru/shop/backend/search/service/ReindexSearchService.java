@@ -21,12 +21,8 @@ public class ReindexSearchService {
     public void reindex(){
         log.info("генерация индексов по товарам запущена");
         dbRepository.findAllInStream().parallel()
-                .map(entity -> new ItemElastic(entity))
-                .forEach(
-                item ->
-                searchRepository.save(item)
-        );
+                .map(ItemElastic::new)
+                .forEach(searchRepository::save);
         log.info("генерация индексов по товарам закончилась");
-
     }
 }

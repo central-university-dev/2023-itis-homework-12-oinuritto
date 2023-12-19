@@ -4,10 +4,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.stereotype.Repository;
 import ru.shop.backend.search.model.ItemElastic;
 
 import java.util.List;
 
+@Repository
 public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Integer> {
 
 
@@ -131,7 +133,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "\"bool\": { \n" +
             "      \"must\": [\n" +
             "{\"match\": {\n" +
-            "      \"type\": {\n" +
+            "      \"fulltext\": {\n" +
             "        \"query\": \"?0\",\n" +
             "        \"fuzziness\": \"2\",\n" +
             "        \"boost\": \"1\"\n" +
@@ -139,7 +141,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "    }}  ],\n" +
             "      \n" +
             "      \"filter\":  [{\"match\":{\n" +
-            "                    \"catalogueId\": \n" +
+            "                    \"catalogue_id\": \n" +
             "                        \"?1\"}\n" +
             "                    }]\n" +
             "    }\n" +
@@ -149,7 +151,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "\"bool\": { \n" +
             "      \"must\": [\n" +
             "{\"match\": {\n" +
-            "      \"type\": {\n" +
+            "      \"fulltext\": {\n" +
             "        \"query\": \"?0\",\n" +
             "        \"fuzziness\": \"2\"\n" +
             "      }\n" +
@@ -159,7 +161,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "                    \"type\": \n" +
             "                        \"?2\"}\n" +
             "                    },{\"match\":{\n" +
-            "                    \"catalogueId\": \n" +
+            "                    \"catalogue_id\": \n" +
             "                        \"?1\"}\n" +
             "                    }]\n" +
             "    }\n" +
