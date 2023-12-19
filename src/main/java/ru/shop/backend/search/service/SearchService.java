@@ -57,6 +57,10 @@ public class SearchService {
         return getAll(text, pageableSmall);
     }
 
+    public List<CatalogueElastic> getAllFull(String text) {
+        return getAll(text, pageable);
+    }
+
     public List<CatalogueElastic> getAll(String text, Pageable pageable) {
         text = text.toLowerCase(Locale.ROOT);
         List<ItemElastic> list = new ArrayList<>();
@@ -109,41 +113,6 @@ public class SearchService {
         return getCatalogueElasticList(text, pageable, list, text2, needConvert, brand, type);
     }
 
-    private List<CatalogueElastic> get(List<ItemElastic> list, String name, String brand) {
-        Map<String, List<ItemElastic>> map = new HashMap<>();
-        ItemElastic searchedItem = getSearchedItem(list, name, map);
-
-        if (brand.isEmpty())
-            brand = null;
-        if (searchedItem != null) {
-            return Collections.singletonList(
-                    new CatalogueElastic(searchedItem.getCatalogue(), searchedItem.getCatalogueId(),
-                            Collections.singletonList(searchedItem), brand));
-        }
-
-        String finalBrand = brand;
-        return map.keySet()
-                .stream()
-                .map(c -> new CatalogueElastic(c, map.get(c).get(0).getCatalogueId(), map.get(c), finalBrand))
-                .collect(Collectors.toList());
-    }
-
-    private ItemElastic getSearchedItem(List<ItemElastic> list, String name, Map<String, List<ItemElastic>> map) {
-        ItemElastic searchedItem = null;
-        String clearedName = name.replace("?", "");
-
-        for (ItemElastic i : list) {
-            if (clearedName.equals(i.getName())) {
-                searchedItem = i;
-            }
-            if (clearedName.endsWith(i.getName()) && clearedName.startsWith(i.getType())) {
-                searchedItem = i;
-            }
-            map.computeIfAbsent(i.getCatalogue(), k -> new ArrayList<>()).add(i);
-        }
-        return searchedItem;
-    }
-
     public List<CatalogueElastic> getByName(String num) {
         List<ItemElastic> list = repo.findAllByName(".*" + num + ".*", pageable);
         return get(list, num, "");
@@ -151,7 +120,11 @@ public class SearchService {
 
     public List<CatalogueElastic> getByItemId(String itemId) {
         var list = repo.findByItemId(itemId, PageRequest.of(0, 1));
-        return Collections.singletonList(new CatalogueElastic(list.get(0).getCatalogue(), list.get(0).getCatalogueId(), list, list.get(0).getBrand()));
+        if (!list.isEmpty()) {
+            return Collections.singletonList(new CatalogueElastic(list.get(0).getCatalogue(), list.get(0).getCatalogueId(), list, list.get(0).getBrand()));
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public static String convert(String message) {
@@ -187,8 +160,39 @@ public class SearchService {
         return errorChars.stream().anyMatch(text::contains);
     }
 
-    public List<CatalogueElastic> getAllFull(String text) {
-        return getAll(text, pageable);
+    private List<CatalogueElastic> get(List<ItemElastic> list, String name, String brand) {
+        Map<String, List<ItemElastic>> map = new HashMap<>();
+        ItemElastic searchedItem = getSearchedItem(list, name, map);
+
+        if (brand.isEmpty())
+            brand = null;
+        if (searchedItem != null) {
+            return Collections.singletonList(
+                    new CatalogueElastic(searchedItem.getCatalogue(), searchedItem.getCatalogueId(),
+                            Collections.singletonList(searchedItem), brand));
+        }
+
+        String finalBrand = brand;
+        return map.keySet()
+                .stream()
+                .map(c -> new CatalogueElastic(c, map.get(c).get(0).getCatalogueId(), map.get(c), finalBrand))
+                .collect(Collectors.toList());
+    }
+
+    private ItemElastic getSearchedItem(List<ItemElastic> list, String name, Map<String, List<ItemElastic>> map) {
+        ItemElastic searchedItem = null;
+        String clearedName = name.replace("?", "");
+
+        for (ItemElastic i : list) {
+            if (clearedName.equals(i.getName())) {
+                searchedItem = i;
+            }
+            if (clearedName.endsWith(i.getName()) && clearedName.startsWith(i.getType())) {
+                searchedItem = i;
+            }
+            map.computeIfAbsent(i.getCatalogue(), k -> new ArrayList<>()).add(i);
+        }
+        return searchedItem;
     }
 
     private List<TypeHelpText> getTypeQueriesFromCatalogueList(List<CatalogueElastic> result) {
@@ -405,9 +409,7 @@ public class SearchService {
                 }
             }
         } else {
-            String catalogueName = getItemElasticListByCatalogue(text, pageable, true).get(0)
-                    .getCatalogue().toLowerCase(Locale.ROOT);
-            text = text.replace(catalogueName, "").trim();
+            text = removeCatalogueNameFromText(text, pageable);
 
             if (!type.equals(emptyType)) {
                 list = repo.find(text, catalogueId, type, pageable);
@@ -422,6 +424,23 @@ public class SearchService {
             }
         }
         return list;
+    }
+
+    private String removeCatalogueNameFromText(String text, Pageable pageable) {
+        List<ItemElastic> itemElasticList;
+        text = text.trim();
+        String catName = "";
+
+        for (String queryWord : text.split("\\s")) {
+            itemElasticList = getItemElasticListByCatalogue(queryWord, pageable, true);
+            if (!itemElasticList.isEmpty()) {
+                catName = queryWord;
+                break;
+            }
+        }
+        text = text.replace(catName, "");
+
+        return text;
     }
 
     private List<ItemElastic> getItemElasticListByCatalogue(String text, Pageable pageable, boolean needConvert) {
